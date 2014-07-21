@@ -1,0 +1,25 @@
+{
+  "name": "ps2-emu",
+  "version": "0.1.2",
+  "description": "PlanetSide 2 network emulation",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/psemu/ps2-emu.git"
+  },
+  "author": {
+      "name" : "Jacob Seidelin", 
+      "email" : "jseidelin@nihilogic.dk", 
+      "url" : "http://github.com/jseidelin"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "soe-network": "git+ssh://git@github.com:psemu/soe-network.git",
+    "soe-locale": "git+ssh://git@github.com:psemu/soe-locale.git",
+    "jenkins-hash": "git+ssh://git@github.com:jseidelin/jenkins-hash.git",
+    "atob": "*",
+    "btoa": "*",
+    "colors": "*",
+    "loglevel": "*",
+    "prompt": "*"
+  }
+}

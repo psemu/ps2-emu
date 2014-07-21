@@ -1,0 +1,11 @@
+{
+    "serverPackets": [
+        "Collision.Damage",
+        "MapRegion.MapOutOfBounds",
+        "ClientUpdate.DamageInfo",
+        "PlayerUpdate.Jet"
+    ],
+    "clientPackets": [
+        "Collision.Damage"
+    ]
+}
