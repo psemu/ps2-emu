@@ -33,15 +33,15 @@ var strings = locale.parseFromBuffer(
     fs.readFileSync("data/en_us_data.dat"),
     fs.readFileSync("data/en_us_data.dir")
 );
-var stringMap = {};
-strings.forEach(function(obj) {
-    stringMap[obj.hash] = obj.string;
-});
+// var stringMap = {};
+// strings.forEach(function(obj) {
+//     stringMap[obj.hash] = obj.string;
+// });
 
 function lookupString(stringId) {  
     var hash = Jenkins.lookup2("Global.Text." + stringId);
-    if (hash in stringMap) {
-        return stringMap[hash];
+    if (hash in strings) {
+        return strings[hash].string;
     } else {
         return "[STRING #" + stringId + "NOT FOUND]";
     }
