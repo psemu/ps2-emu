@@ -82,7 +82,7 @@ function promptForCharacter() {
                     loginClient.requestCharacterLogin(
                         character.characterId,
                         character.serverId,
-                        "en_us"
+                        "<CharacterLoginRequest Locale=\"en_US\" LocaleId=\"8\" PreferredGatewayId=\"0\" SkipTutorial=\"0\"><ClientBuildInfo PlatformType=\"2\" OsName=\"Windows\" OsVersion=\"6.2\" AppVersion=\"0.573.4.313037\" BranchName=\"Test\"/></CharacterLoginRequest>"
                     );
                 } else {
                     promptForCharacter();
@@ -96,11 +96,11 @@ function promptForCharacter() {
 
 
 function startZoneClient(loginData) {
-    var address = loginData.payload.serverAddress.split(":")[0],
-        port = +(loginData.payload.serverAddress.split(":")[1]),
-        ticket = loginData.payload.serverTicket,
-        key = new Buffer(loginData.payload.encryptionKey),
-        characterId = loginData.payload.characterId;
+    var address = loginData.payload.match(/GatewayAddress=\"(.*?)\"/)[1].split(":")[0],
+        port = +(loginData.payload.match(/GatewayAddress=\"(.*?)\"/)[1].split(":")[1]),
+        ticket = loginData.payload.match(/GatewayTicket=\"(.*?)\"/)[1],
+        key = new Buffer(atob(loginData.payload.match(/<Data>(.*?)<\/Data>/)[1])),
+        characterId = loginData.characterId;
 
     debug("Starting Zone client for character " + characterId);
 

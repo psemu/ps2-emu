@@ -96,23 +96,35 @@ for (var i=1;i<itemLines.length;i++) {
 }
 referenceData.itemTypes = items;
 
+function packetNum(n) {
+    return ("000000" + n).substr(-6);
+}
+
+
 streams["loginserver"] = new SOEInputStream(loginKey);
 streams["loginserver"].toggleEncryption(true);
 streams["loginserver"].on("data", function(err, data) {
     m++;
     debug("Data packet from login server");
-    var packet = loginProtocol.parse(data);
-    if (!packet) {
-        packet = {name: "failed"};
+    try {
+        var packet = loginProtocol.parse(data);
+        if (!packet) {
+            packet = {name: "failed"};
+        }
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_" + packet.name + "_server.dat"), data);
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_" + packet.name + "_server.json"), JSON.stringify(packet, null, 2));
+    } catch (e) {
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_failedhard_server.dat"), data);
+        return;
     }
-    fs.writeFileSync(path.join(outPath, "loginpacket_" + m + "_" + packet.name + "_server.dat"), data);
-    fs.writeFileSync(path.join(outPath, "loginpacket_" + m + "_" + packet.name + "_server.json"), JSON.stringify(packet, null, 2));
 
     if (packet.name == "CharacterLoginReply") {
-        testZoneServer = packet.result.payload.serverAddress.split(":")[0];
+        //testZoneServer = packet.result.payload.match(/GatewayAddress=\"(.*?)\"/)[1].split(":")[0];
+        var encryptionKey = atob(packet.result.payload.match(/<Data>(.*?)<\/Data>/)[1]);
         firstClientPacket = true;
 
-        streams["zoneserver"] = new SOEInputStream(packet.result.payload.encryptionKey);
+
+        streams["zoneserver"] = new SOEInputStream(encryptionKey);
         streams["zoneserver"].toggleEncryption(true);
         streams["zoneserver"].on("data", function(err, data) {
             setTimeout(function() {
@@ -124,19 +136,19 @@ streams["loginserver"].on("data", function(err, data) {
                         var zonePacket = zoneProtocol.parse(packet.tunnelData, packet.flags, false, referenceData);
                         if (zonePacket) {
                             if (ignoreZonePackets.indexOf(zonePacket.name) == -1 && (writeZonePackets.length == 0 || writeZonePackets.indexOf(zonePacket.name) > -1)) {
-                                fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_" + zonePacket.name + "_server.dat"), packet.tunnelData);
-                                fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_" + zonePacket.name + "_server.json"), JSON.stringify(zonePacket, null, 2));
+                                fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_" + zonePacket.name + "_server.dat"), packet.tunnelData);
+                                fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_" + zonePacket.name + "_server.json"), JSON.stringify(zonePacket, null, 2));
                             }
                         }
                     }
                 } catch(e) {
                     console.log("Failed parsing packet " + m + " (" + e + ")");
-                    fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_failed_server.dat"), data);
+                    fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_failed_server.dat"), data);
                 }
             },0);
         });
 
-        streams["zoneclient"] = new SOEInputStream(packet.result.payload.encryptionKey);
+        streams["zoneclient"] = new SOEInputStream(encryptionKey);
         streams["zoneclient"].toggleEncryption(false);
         streams["zoneclient"].on("data", function(err, data) {
             setTimeout(function() {
@@ -148,15 +160,15 @@ streams["loginserver"].on("data", function(err, data) {
                         var zonePacket = zoneProtocol.parse(packet.tunnelData, packet.flags, true, referenceData);
                         if (zonePacket) {
                             if (ignoreZonePackets.indexOf(zonePacket.name) == -1 && (writeZonePackets.length == 0 || writeZonePackets.indexOf(zonePacket.name) > -1)) {
-                                fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_" + zonePacket.name + "_client.dat"), packet.tunnelData);
-                                fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_" + zonePacket.name + "_client.json"), JSON.stringify(zonePacket, null, 2));
+                                fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_" + zonePacket.name + "_client.dat"), packet.tunnelData);
+                                fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_" + zonePacket.name + "_client.json"), JSON.stringify(zonePacket, null, 2));
                             }
                         }
                     }
 
                 } catch(e) {
                     console.log("Failed parsing packet " + m + " (" + e + ")");
-                    fs.writeFileSync(path.join(outPath, "zonepacket_" + m + "_failed_client.dat"), data);
+                    fs.writeFileSync(path.join(outPath, "zonepacket_" + packetNum(m) + "_failed_client.dat"), data);
                 }
             },0);
             if (firstClientPacket) {
@@ -171,12 +183,18 @@ streams["loginclient"] = new SOEInputStream(loginKey);
 streams["loginclient"].toggleEncryption(true);
 streams["loginclient"].on("data", function(err, data) {
     m++;
-    debug("Data packet from login server");
-    var packet = loginProtocol.parse(data);
-    if (!packet) {
-        packet = {name: "failed"};
+    debug("Data packet from login client");
+    try {
+        var packet = loginProtocol.parse(data);
+        if (!packet) {
+            packet = {name: "failed"};
+        }
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_" + packet.name + "_client.dat"), data);
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_" + packet.name + "_client.json"), JSON.stringify(packet, null, 2));
+    } catch(e) {
+        fs.writeFileSync(path.join(outPath, "loginpacket_" + packetNum(m) + "_failedhard_client.dat"), data);
+        return;
     }
-    fs.writeFileSync(path.join(outPath, "loginpacket_" + m + "_" + packet.name + "_client.dat"), data);
 });
 
 
@@ -218,6 +236,7 @@ parser.on("packet", function(packet) {
 
     //debug("Reading packet " + n + " [src: " + src + "] [dst: " + dst + "]");
 
+    try {
     var result = protocol.parse(packetData, crcSeed, compression);
 
     if (result.appPackets) {
@@ -227,6 +246,10 @@ parser.on("packet", function(packet) {
                 stream.write(appPacket.data, appPacket.sequence, appPacket.fragment);
             }
         }
+    }
+    } catch(e) {
+        fs.writeFileSync(path.join(outPath, "soepacket_failed_" + n + ".dat"), packetData);
+        throw e;
     }
     },1);
 });
