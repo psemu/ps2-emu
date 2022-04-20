@@ -13,7 +13,7 @@ Note: as the network protocol constantly evolves, it is unlikely that these will
 
 This script tests the login and zone client functionality.
 
-First, login at http://lp.soe.com/ps2/test/ and grab the `lp-token` cookie value. Add this to the token.js file and then run:
+First, login at https://lpj.daybreakgames.com/ps2/test/ and grab the `lp-token` cookie value. Add this to the token.js file and then run:
 
 `node fullclienttest.js`
 
